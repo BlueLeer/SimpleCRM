@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+    <!--开启组件扫描-->
+    <context:component-scan base-package="com.lee.crm"/>
+    <!--引入属性文件-->
+    <context:property-placeholder location="classpath:configuration.properties"/>
+
+    <!--配置c3p0连接池-->
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <!--数据库连接信息-->
+        <property name="driverClass" value="${jdbc.driverClass}"/>
+        <property name="jdbcUrl" value="${jdbc.url}"/>
+        <property name="user" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+
+    <!--配置Hibernate的SessionFactory-->
+    <bean id="sessionFactory" class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <!--<property name="mappingResources">-->
+        <!--&lt;!&ndash;实体类映射文件&ndash;&gt;-->
+        <!--&lt;!&ndash;<list>&ndash;&gt;-->
+        <!--&lt;!&ndash;<value>user.hbm.xml</value>&ndash;&gt;-->
+        <!--&lt;!&ndash;</list>&ndash;&gt;-->
+        <!--</property>-->
+        <property name="hibernateProperties">
+            <props>
+                <prop key="hibernate.dialect">org.hibernate.dialect.MySQL55Dialect</prop> <!--配置数据库方言-->
+                <prop key="hibernate.show_sql">true</prop><!-- 是否展示SQL -->
+                <prop key="hibernate.hbm2ddl.auto">update</prop><!-- 是否自动创建表结构 -->
+
+                <!--因为事务已经接管了Session的创建,这里不能写这一句-->
+                <!--<prop key="hibernate.current_session_context_class">thread</prop> &lt;!&ndash;配置Session和线程绑定&ndash;&gt;-->
+            </props>
+
+        </property>
+
+        <!-- 扫描并加载注解过的实体类 -->
+        <property name="packagesToScan" value="com.lee.crm.model"/>
+    </bean>
+
+
+    <!--配置事务管理器-->
+    <bean id="transactionManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+        <!--注入SessionFactory-->
+        <property name="sessionFactory" ref="sessionFactory"/>
+    </bean>
+
+    <!--配置事务增强-->
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <!--配置需要增强的方法,和传播行为-->
+        <tx:attributes>
+            <!--<tx:method name="add*" isolation="DEFAULT" propagation="REQUIRED"/>-->
+            <!--<tx:method name="insert*" isolation="DEFAULT" propagation="REQUIRED"/>-->
+            <!--<tx:method name="update*" isolation="DEFAULT" propagation="REQUIRED"/>-->
+            <!--<tx:method name="delete*" isolation="DEFAULT" propagation="REQUIRED"/>-->
+            <!--<tx:method name="get*" isolation="DEFAULT" propagation="REQUIRED"/>-->
+            <tx:method name="regist*" isolation="DEFAULT" propagation="REQUIRED"/>
+            <tx:method name="login*" isolation="DEFAULT" propagation="REQUIRED"/>
+            <tx:method name="add*" isolation="DEFAULT" propagation="REQUIRED"/>
+            <tx:method name="delete*" isolation="DEFAULT" propagation="REQUIRED"/>
+            <tx:method name="update*" isolation="DEFAULT" propagation="REQUIRED"/>
+            <tx:method name="find*" isolation="DEFAULT" propagation="REQUIRED"/>
+            <tx:method name="get*" isolation="DEFAULT" propagation="REQUIRED"/>
+        </tx:attributes>
+    </tx:advice>
+
+    <!--配置事务管理切面-->
+    <aop:config>
+        <!--
+        execution是AspectJ表达式:
+        第一个 * :任何返回值,包括null
+        com.lee.userlogin.service..* : 表示com.lee.userlogin.service包及其子包下的所有类
+        com.lee.userlogin.service..*.*(..) : 表示com.lee.userlogin.service包及其子包下的所有类的所有方法
+        -->
+        <!--<aop:pointcut id="pointcut" expression="execution(* com.lee.userlogin.service..*.*(..))"/>-->
+        <aop:pointcut id="pointcut" expression="execution(* com.lee.crm.service..*.*(..))"/>
+        <!--配置切入点以及事务增强-->
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="pointcut"/>
+    </aop:config>
+
+    <!--struts的Action配置-->
+    <bean id="userAction" class="com.lee.crm.action.UserAction" scope="prototype"/>
+    <bean id="globalAction" class="com.lee.crm.action.GlobalAction" scope="prototype"/>
+    <bean id="customerAction" class="com.lee.crm.action.CustomerAction" scope="prototype"/>
+</beans>

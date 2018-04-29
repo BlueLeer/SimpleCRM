@@ -1,0 +1,53 @@
+<!DOCTYPE struts PUBLIC
+        "-//Apache Software Foundation//DTD Struts Configuration 2.5//EN"
+        "http://struts.apache.org/dtds/struts-2.5.dtd">
+<struts>
+    <package name="user" extends="struts-default" namespace="/">
+        <global-results>
+            <result name="success" type="redirect">/index.jsp</result>
+            <result name="error">/error.jsp</result>
+        </global-results>
+
+        <!--开启动态方法访问-->
+        <global-allowed-methods>regex:.*</global-allowed-methods>
+
+
+        <!--用户模块-->
+        <action name="user_*" class="userAction" method="{1}">
+            <result name="success">
+                /index.jsp
+            </result>
+            <result name="error">
+                /login.jsp
+            </result>
+        </action>
+
+        <!--获取验证码-->
+        <action name="verifycode" class="com.lee.crm.action.GlobalAction" method="verifycode"></action>
+
+        <!--客户模块-->
+        <action name="customer_*" class="customerAction" method="{1}">
+            <result name="success">
+                /jsp/success.jsp
+            </result>
+            <result name="error">
+                /jsp/error.jsp
+            </result>
+
+            <result name="list_success">
+                /jsp/customer/list.jsp
+            </result>
+            <result name="list_error">
+                /error.jsp
+            </result>
+
+            <result name="pre_update_success">
+                /jsp/customer/update.jsp
+            </result>
+
+            <result name="update_success">
+                /jsp/success.jsp
+            </result>
+        </action>
+    </package>
+</struts>
